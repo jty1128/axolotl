@@ -15,7 +15,6 @@ from transformers import PreTrainedTokenizer
 from axolotl.utils.data import load_tokenized_prepared_datasets
 from axolotl.utils.data.rl import load_prepare_preference_datasets
 from axolotl.utils.dict import DictDefault
-
 from tests.constants import (
     ALPACA_MESSAGES_CONFIG_OG,
     ALPACA_MESSAGES_CONFIG_REVISION,
@@ -404,7 +403,6 @@ class TestDatasetPreparation:
                 assert "labels" in dataset.features
                 shutil.rmtree(tmp_ds_path)
 
-    @enable_hf_offline
     def test_loading_local_dataset_folder(self, tokenizer):
         """Verify that a dataset downloaded to a local folder can be loaded"""
 
