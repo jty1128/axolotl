@@ -12,6 +12,29 @@ from axolotl.utils.chat_templates import _CHAT_TEMPLATES
 from tests.hf_offline_utils import enable_hf_offline
 
 
+MULTIPLES_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "multiples",
+        "description": "Generates a list of all the multiples of a number that are less than a given limit.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "number": {
+                    "type": "integer",
+                    "description": "The number to find multiples of.",
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "The upper limit for the multiples.",
+                },
+            },
+            "required": ["number", "limit"],
+        },
+    },
+}
+
+
 @pytest.fixture(name="assistant_dataset")
 def fixture_assistant_dataset():
     return Dataset.from_list(
