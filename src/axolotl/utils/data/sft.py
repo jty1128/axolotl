@@ -3,7 +3,8 @@
 import functools
 import os
 import tempfile
-from typing import Any, Generator, Literal
+from collections.abc import Generator
+from typing import Any, Literal
 
 from datasets import (
     Dataset,
@@ -279,7 +280,7 @@ def _load_tokenized_prepared_datasets(
 
     # If not found on hub, try loading from disk
     if dataset is None:
-        dataset = load_preprocessed_dataset(cfg, dataset_hash)
+        dataset = load_preprocessed_dataset(cfg, dataset_hash)  # pylint: disable=duplicate-code
 
     # If not found on disk or skipping prepared dataset, load and process raw datasets
     prompters: list[Prompter | None] = []

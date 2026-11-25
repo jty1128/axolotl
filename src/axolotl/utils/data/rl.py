@@ -2,8 +2,9 @@
 
 import inspect
 import os
+from collections.abc import Callable
 from functools import partial
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 from datasets import Dataset, DatasetDict
 from transformers import PreTrainedTokenizer
@@ -13,14 +14,12 @@ from axolotl.prompt_strategies.dpo import load as load_dpo
 from axolotl.prompt_strategies.kto import load as load_kto
 from axolotl.prompt_strategies.orpo import load as load_orpo
 from axolotl.utils.data.lock import FileLockLoader
-from axolotl.utils.data.sft import _try_load_from_hub
 from axolotl.utils.data.shared import (
     create_train_validation_split,
     datasets_with_name_generator,
     generate_dataset_hash_from_config,
     get_prepared_dataset_path,
     load_dataset_with_config,
-    load_preprocessed_dataset,
     merge_datasets,
 )
 from axolotl.utils.data.utils import (
@@ -299,17 +298,5 @@ def _load_or_create_dataset_split(
         cfg, datasets_config, tokenizer.name_or_path
     )
 
-    # Try loading from hub if push_dataset_to_hub is configured
-    dataset = None
-    if cfg.push_dataset_to_hub:
-        dataset = _try_load_from_hub(cfg, dataset_hash, split)
-
-    # Attempt to load preprocessed dataset
-    if dataset is None:
-        dataset = load_preprocessed_dataset(cfg, dataset_hash)
-
-    # Otherwise, load it
-    if dataset is None:
-        dataset = _load_split(cfg, split=split)
-
-    return dataset
+    # Delegate loading logic to the shared utility function to avoid code duplication
+    return load_dataset_split(cfg, dataset_hash, split)
