@@ -13,15 +13,14 @@ from axolotl.prompt_strategies.dpo import load as load_dpo
 from axolotl.prompt_strategies.kto import load as load_kto
 from axolotl.prompt_strategies.orpo import load as load_orpo
 from axolotl.utils.data.lock import FileLockLoader
-from axolotl.utils.data.sft import _try_load_from_hub
 from axolotl.utils.data.shared import (
     create_train_validation_split,
     datasets_with_name_generator,
     generate_dataset_hash_from_config,
     get_prepared_dataset_path,
     load_dataset_with_config,
-    load_preprocessed_dataset,
     merge_datasets,
+    try_load_prepared_dataset,
 )
 from axolotl.utils.data.utils import (
     deduplicate_and_log_datasets,
@@ -299,14 +298,8 @@ def _load_or_create_dataset_split(
         cfg, datasets_config, tokenizer.name_or_path
     )
 
-    # Try loading from hub if push_dataset_to_hub is configured
-    dataset = None
-    if cfg.push_dataset_to_hub:
-        dataset = _try_load_from_hub(cfg, dataset_hash, split)
-
-    # Attempt to load preprocessed dataset
-    if dataset is None:
-        dataset = load_preprocessed_dataset(cfg, dataset_hash)
+    # Try loading from hub or disk if a prepared dataset exists
+    dataset = try_load_prepared_dataset(cfg, dataset_hash, split)
 
     # Otherwise, load it
     if dataset is None:

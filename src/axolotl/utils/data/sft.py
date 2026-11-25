@@ -22,8 +22,8 @@ from axolotl.utils.data.shared import (
     generate_dataset_hash_from_config,
     get_prepared_dataset_path,
     load_dataset_with_config,
-    load_preprocessed_dataset,
     merge_datasets,
+    try_load_prepared_dataset,
 )
 from axolotl.utils.data.utils import (
     deduplicate_and_log_datasets,
@@ -272,14 +272,8 @@ def _load_tokenized_prepared_datasets(
         cfg, cfg_datasets, tokenizer.name_or_path
     )
 
-    # Try loading from hub if push_dataset_to_hub is configured
-    dataset = None
-    if cfg.push_dataset_to_hub:
-        dataset = _try_load_from_hub(cfg, dataset_hash, split)
-
-    # If not found on hub, try loading from disk
-    if dataset is None:
-        dataset = load_preprocessed_dataset(cfg, dataset_hash)
+    # Try loading from hub or disk if a prepared dataset exists
+    dataset = try_load_prepared_dataset(cfg, dataset_hash, split)
 
     # If not found on disk or skipping prepared dataset, load and process raw datasets
     prompters: list[Prompter | None] = []
@@ -294,26 +288,6 @@ def _load_tokenized_prepared_datasets(
         )
 
     return dataset, prompters
-
-
-def _try_load_from_hub(
-    cfg: DictDefault, dataset_hash: str, split: str
-) -> Dataset | None:
-    """Try to load the prepared dataset from HuggingFace Hub."""
-    try:
-        LOG.info(
-            "Attempting to load prepared dataset from HuggingFace Hub at "
-            f"{cfg.push_dataset_to_hub} (version {dataset_hash})..."
-        )
-        dataset = load_dataset(
-            cfg.push_dataset_to_hub,
-            dataset_hash,
-            token=cfg.hf_use_auth_token,
-        )
-        return dataset[split]
-    except Exception:  # pylint: disable=broad-except # nosec
-        LOG.info("Unable to find prepared dataset in HuggingFace Hub")
-        return None
 
 
 def _generate_from_iterable_dataset(

@@ -391,6 +391,49 @@ def create_train_validation_split(
     return split_dataset["train"], split_dataset["test"]
 
 
+def _try_load_from_hub(
+    cfg: DictDefault, dataset_hash: str, split: str
+) -> Dataset | None:
+    """Try to load the prepared dataset from HuggingFace Hub."""
+    try:
+        LOG.info(
+            "Attempting to load prepared dataset from HuggingFace Hub at "
+            f"{cfg.push_dataset_to_hub} (version {dataset_hash})..."
+        )
+        dataset = load_dataset(
+            cfg.push_dataset_to_hub,
+            dataset_hash,
+            token=cfg.hf_use_auth_token,
+        )
+        return dataset[split]
+    except Exception:  # pylint: disable=broad-except # nosec
+        LOG.info("Unable to find prepared dataset in HuggingFace Hub")
+        return None
+
+
+def try_load_prepared_dataset(
+    cfg: DictDefault, dataset_hash: str, split: str
+) -> Dataset | None:
+    """Try loading a prepared dataset from the HuggingFace Hub or local disk.
+
+    Args:
+        cfg: Configuration object.
+        dataset_hash: Hash identifying the dataset configuration.
+        split: Dataset split to load.
+
+    Returns:
+        Loaded dataset if found, None otherwise.
+    """
+    dataset = None
+    if cfg.push_dataset_to_hub:
+        dataset = _try_load_from_hub(cfg, dataset_hash, split)
+
+    if dataset is None:
+        dataset = load_preprocessed_dataset(cfg, dataset_hash)
+
+    return dataset
+
+
 def load_preprocessed_dataset(cfg: DictDefault, dataset_hash: str) -> Dataset | None:
     """Load preprocessed dataset from disk if available.
 
