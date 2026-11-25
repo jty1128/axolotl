@@ -4,10 +4,11 @@ import concurrent.futures
 import dataclasses
 import hashlib
 import json
+from collections.abc import Callable
 from functools import wraps
 from pathlib import Path
 from types import NoneType
-from typing import Any, Callable, Type, Union, get_args, get_origin
+from typing import Any, Union, get_args, get_origin
 
 import click
 import requests
@@ -16,7 +17,6 @@ from transformers import (
     PreTrainedModel,
     PreTrainedTokenizer,
     PreTrainedTokenizerFast,
-    ProcessorMixin,
 )
 
 from axolotl.loaders import load_processor, load_tokenizer
@@ -67,7 +67,7 @@ def filter_none_kwargs(func: Callable) -> Callable:
     return wrapper
 
 
-def add_options_from_dataclass(config_class: Type[Any]) -> Callable:
+def add_options_from_dataclass(config_class: type[Any]) -> Callable:
     """
     Create Click options from the fields of a dataclass.
 
@@ -105,7 +105,7 @@ def add_options_from_dataclass(config_class: Type[Any]) -> Callable:
     return decorator
 
 
-def add_options_from_config(config_class: Type[BaseModel]) -> Callable:
+def add_options_from_config(config_class: type[BaseModel]) -> Callable:
     """
     Create Click options from the fields of a Pydantic model.
 
@@ -215,8 +215,8 @@ def download_file(
             file.write(response.content)
 
         return file_path, status
-    except (requests.RequestException, IOError) as request_error:
-        print(f"Error downloading {file_path}: {str(request_error)}")
+    except (OSError, requests.RequestException) as request_error:
+        print(f"Error downloading {file_path}: {request_error!s}")
         return file_path, "error"
 
 
@@ -282,8 +282,8 @@ def fetch_from_github(
             try:
                 file_path, status = future.result()
                 files_processed[status].append(file_path)
-            except (requests.RequestException, IOError) as request_error:
-                print(f"Error processing {file_path}: {str(request_error)}")
+            except (OSError, requests.RequestException) as request_error:
+                print(f"Error processing {file_path}: {request_error!s}")
                 files_processed["error"].append(file_path)
 
     # Log summary
@@ -302,10 +302,9 @@ def load_model_and_tokenizer(
 ) -> tuple[
     PreTrainedModel,
     PreTrainedTokenizer | PreTrainedTokenizerFast | Any,
-    ProcessorMixin | None,
 ]:
     """
-    Helper function for loading a model, tokenizer, and processor specified in the given `axolotl`
+    Helper function for loading a model and tokenizer specified in the given `axolotl`
     config.
 
     Args:
@@ -313,7 +312,7 @@ def load_model_and_tokenizer(
         inference: Boolean denoting inference mode.
 
     Returns:
-        Tuple of (PreTrainedModel, PreTrainedTokenizer, ProcessorMixin).
+        Tuple of (PreTrainedModel, PreTrainedTokenizer).
     """
     LOG.info(f"loading tokenizer... {cfg.tokenizer_config or cfg.base_model_config}")
     tokenizer = load_tokenizer(cfg)
@@ -322,9 +321,8 @@ def load_model_and_tokenizer(
     model_loader = ModelLoader(cfg, tokenizer, inference=inference)
     model, _ = model_loader.load()
 
-    processor = None
     if cfg.is_multimodal:
         LOG.info("loading processor...")
-        processor = load_processor(cfg, tokenizer)
+        load_processor(cfg, tokenizer)
 
-    return model, tokenizer, processor
+    return model, tokenizer
