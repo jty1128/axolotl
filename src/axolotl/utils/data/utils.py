@@ -4,7 +4,6 @@ import functools
 import hashlib
 import time
 from enum import Enum
-from typing import Optional
 
 import huggingface_hub
 import numpy as np
@@ -77,7 +76,7 @@ def compute_row_hash(example):
 def deduplicate_dataset(
     dataset: Dataset,
     other_dataset: Dataset = None,
-    num_proc: Optional[int] = None,
+    num_proc: int | None = None,
 ) -> Dataset:
     if dataset is None:
         LOG.warning("dataset is None. De-duplication cannot be performed.")
@@ -96,7 +95,7 @@ def deduplicate_dataset(
         other_hashed = other_dataset.map(
             compute_row_hash,
             remove_columns=other_dataset.column_names,
-            num_proc=num_proc
+            num_proc=num_proc,
         )
         other_hashes = set(other_hashed["row_hash"])
         del other_hashed
@@ -120,7 +119,7 @@ def deduplicate_and_log_datasets(
     train_dataset: Dataset = None,
     eval_dataset: Dataset = None,
     dataset: Dataset = None,
-    num_proc: Optional[int] = None,
+    num_proc: int | None = None,
 ) -> tuple[Dataset, Dataset, Dataset]:
     """
     Deduplicates train, eval, and an optional dataset if provided, logging original and new sizes.
