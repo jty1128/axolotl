@@ -21,7 +21,7 @@ from tests.constants import (
     ALPACA_MESSAGES_CONFIG_REVISION,
     SPECIAL_TOKENS,
 )
-from tests.hf_offline_utils import enable_hf_offline
+from tests.hf_offline_utils import enable_hf_offline, hf_offline_context
 
 
 class TestDatasetPreparation:
@@ -404,7 +404,6 @@ class TestDatasetPreparation:
                 assert "labels" in dataset.features
                 shutil.rmtree(tmp_ds_path)
 
-    @enable_hf_offline
     def test_loading_local_dataset_folder(self, tokenizer):
         """Verify that a dataset downloaded to a local folder can be loaded"""
 
@@ -432,10 +431,13 @@ class TestDatasetPreparation:
                 }
             )
 
-            dataset, _ = load_tokenized_prepared_datasets(tokenizer, cfg, prepared_path)
+            with hf_offline_context(True):
+                dataset, _ = load_tokenized_prepared_datasets(
+                    tokenizer, cfg, prepared_path
+                )
 
-            assert len(dataset) == 2000
-            assert "input_ids" in dataset.features
-            assert "attention_mask" in dataset.features
-            assert "labels" in dataset.features
+                assert len(dataset) == 2000
+                assert "input_ids" in dataset.features
+                assert "attention_mask" in dataset.features
+                assert "labels" in dataset.features
             shutil.rmtree(tmp_ds_path)
