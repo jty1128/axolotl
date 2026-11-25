@@ -5,7 +5,6 @@ import os
 import tempfile
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import Union
 from urllib.parse import urlparse
 
 import requests
@@ -29,7 +28,7 @@ from axolotl.utils.wandb_ import setup_wandb_env_vars
 LOG = get_logger(__name__)
 
 
-def check_remote_config(config: Union[str, Path]) -> Union[str, Path]:
+def check_remote_config(config: str | Path) -> str | Path:
     """
     First, determines if the passed config is a valid HTTPS URL. Then, attempts to query
     for it and parse its content, first as JSON, then as YAML (YAML is preferred).
@@ -77,7 +76,6 @@ def check_remote_config(config: Union[str, Path]) -> Union[str, Path]:
             except yaml.YAMLError as err:
                 raise ValueError(
                     f"Failed to parse the content at {config} as YAML: {err}",
-                    use_environ=True,
                 ) from err
 
         # Write the content to a file if it's valid YAML (or JSON treated as YAML)
