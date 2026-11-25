@@ -15,7 +15,8 @@
 """
 Chat template prompt strategy loader with KD support
 """
-from typing import Any, Dict
+
+from typing import Any
 
 import torch
 
@@ -189,10 +190,10 @@ class KDStrategyLoader(StrategyLoader):
     Load ChatTemplateStrategy with KD support using StrategyLoader.
     """
 
-    def _get_strategy_cls(self):
+    def _get_strategy_cls(self, cfg):
         return ChatTemplateStrategyWithKD
 
-    def _get_strategy_params(self, cfg, ds_cfg: Dict[str, Any]):
+    def _get_strategy_params(self, cfg, ds_cfg: dict[str, Any]):
         strategy_params = super()._get_strategy_params(cfg, ds_cfg)
         if logprobs_field := ds_cfg.get("logprobs_field"):
             strategy_params["logprobs_field"] = logprobs_field
