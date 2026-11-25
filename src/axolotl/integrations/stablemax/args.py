@@ -1,3 +1,5 @@
+"""StableMax arguments module."""
+
 from pydantic import BaseModel, Field
 
 

@@ -1,3 +1,5 @@
+"""StableMax activation and cross-entropy loss functions."""
+
 import torch
 import torch.nn.functional as F
 
@@ -13,12 +15,10 @@ def stablemax_fn(x):
 
 
 def stablemax_cross_entropy(
-    input,
+    inputs,
     target,
     weight=None,
     ignore_index=-100,
-    size_average=None,
-    reduce=None,
     reduction="mean",
     label_smoothing=0.0,
 ):
